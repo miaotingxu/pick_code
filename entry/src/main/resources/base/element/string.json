@@ -1,0 +1,80 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "快递取件码管理应用"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "快递取件码管理"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "取件助手"
+    },
+    {
+      "name": "tab_pending",
+      "value": "待取"
+    },
+    {
+      "name": "tab_picked",
+      "value": "已取"
+    },
+    {
+      "name": "title_pending_parcels",
+      "value": "待取包裹"
+    },
+    {
+      "name": "title_pickup_records",
+      "value": "取件记录"
+    },
+    {
+      "name": "filter_by_time",
+      "value": "按时间"
+    },
+    {
+      "name": "pickup_action",
+      "value": "取件"
+    },
+    {
+      "name": "copy_success",
+      "value": "取件码已复制"
+    },
+    {
+      "name": "delete_success",
+      "value": "删除成功"
+    },
+    {
+      "name": "add_parcel",
+      "value": "添加取件码"
+    },
+    {
+      "name": "courier_company",
+      "value": "快递公司"
+    },
+    {
+      "name": "station_name",
+      "value": "驿站名称"
+    },
+    {
+      "name": "pickup_code",
+      "value": "取件码"
+    },
+    {
+      "name": "address",
+      "value": "地址"
+    },
+    {
+      "name": "save",
+      "value": "保存"
+    },
+    {
+      "name": "cancel",
+      "value": "取消"
+    },
+    {
+      "name": "permission_read_messages",
+      "value": "用于自动读取快递取件码短信"
+    }
+  ]
+}

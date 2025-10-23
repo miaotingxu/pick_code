@@ -1,0 +1,64 @@
+{
+  "color": [
+    {
+      "name": "start_window_background",
+      "value": "#FFFFFF"
+    },
+    {
+      "name": "background_color",
+      "value": "#F5F5F5"
+    },
+    {
+      "name": "card_background",
+      "value": "#FFFFFF"
+    },
+    {
+      "name": "primary_text",
+      "value": "#000000"
+    },
+    {
+      "name": "secondary_text",
+      "value": "#999999"
+    },
+    {
+      "name": "accent_blue",
+      "value": "#007AFF"
+    },
+    {
+      "name": "accent_green",
+      "value": "#00C853"
+    },
+    {
+      "name": "divider_color",
+      "value": "#E5E5E5"
+    },
+    {
+      "name": "filter_button_bg",
+      "value": "#F0F0F0"
+    },
+    {
+      "name": "filter_button_active_bg",
+      "value": "#000000"
+    },
+    {
+      "name": "filter_button_text",
+      "value": "#666666"
+    },
+    {
+      "name": "filter_button_active_text",
+      "value": "#FFFFFF"
+    },
+    {
+      "name": "tab_inactive_bg",
+      "value": "#F5F5F5"
+    },
+    {
+      "name": "tab_active_indicator",
+      "value": "#000000"
+    },
+    {
+      "name": "tab_border_color",
+      "value": "#CCCCCC"
+    }
+  ]
+}
