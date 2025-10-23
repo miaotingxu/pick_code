@@ -75,6 +75,10 @@
     {
       "name": "permission_read_messages",
       "value": "用于自动读取快递取件码短信"
+    },
+    {
+      "name": "permission_notification",
+      "value": "用于监听快递短信通知，自动识别取件码"
     }
   ]
 }

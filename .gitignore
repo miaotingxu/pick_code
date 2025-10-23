@@ -1,12 +1,27 @@
-/node_modules
-/oh_modules
-/local.properties
-/.idea
-**/build
-/.hvigor
-.cxx
-/.clangd
-/.clang-format
-/.clang-tidy
-**/.test
-/.appanalyzer
+# DevEco Studio files
+.idea/
+.hvigor/
+local.properties
+node_modules/
+
+# Build outputs
+build/
+entry/build/
+oh_modules/.ohpm/
+
+# Signing files (IMPORTANT: Keep these private!)
+signature/*.p12
+signature/*.cer
+signature/*.p7b
+signature/*.jks
+*.keystore
+
+# Local configuration
+local.properties
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

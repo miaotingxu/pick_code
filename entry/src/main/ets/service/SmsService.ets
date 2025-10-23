@@ -151,5 +151,69 @@ export class SmsService {
     }
     return false;
   }
+
+  /**
+   * 批量解析短信内容
+   * @param smsMessages 短信内容数组
+   * @returns 解析成功的包裹列表
+   */
+  parseBatchSms(smsMessages: string[]): ParcelModel[] {
+    const parcels: ParcelModel[] = [];
+    
+    for (const sms of smsMessages) {
+      const parcel = this.parseSmsContent(sms);
+      if (parcel) {
+        parcels.push(parcel);
+      }
+    }
+    
+    return parcels;
+  }
+
+  /**
+   * 通知监听功能（已禁用）
+   * 原因：需要系统级权限 NOTIFICATION_CONTROLLER，普通应用无法使用
+   * 替代方案：使用短信分享导入或剪贴板导入功能
+   */
+  async startNotificationListener(context: Context, callback: (smsContent: string) => void): Promise<boolean> {
+    console.warn('Notification listener is not available for regular apps');
+    console.warn('Please use SMS sharing or clipboard import instead');
+    return false;
+  }
+
+  /**
+   * 判断是否是快递通知
+   */
+  private isDeliveryNotification(content: string): boolean {
+    // 关键词列表
+    const keywords = [
+      '取件码', '验证码', '快递', '包裹', '驿站',
+      '菜鸟', '妈妈驿站', '兔喜',
+      '顺丰', '中通', '圆通', '申通', '韵达',
+      '极兔', '京东', '邮政', 'EMS'
+    ];
+
+    // 检查是否包含任何关键词
+    for (const keyword of keywords) {
+      if (content.includes(keyword)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * 检查短信内容是否包含取件码
+   */
+  hasPickupCode(content: string): boolean {
+    const pickupCodePattern = /取件码[：:]\s*(\d+-\d+-\d+)/i;
+    const altPattern = /验证码[：:]\s*(\d+-\d+-\d+)/i;
+    const longCodePattern = /[A-Z]{2}\d{10,}/; // SF1234567890, JD8888888888
+    
+    return pickupCodePattern.test(content) || 
+           altPattern.test(content) ||
+           longCodePattern.test(content);
+  }
 }
 

@@ -13,11 +13,10 @@ import { common } from '@kit.AbilityKit';
 struct Index {
   @State currentTab: number = 0; // 0-待取, 1-已取
   @State parcelList: ParcelModel[] = [];
-  @State selectedFilter: string = '按时间';
+  @State selectedSortMode: string = '按时间'; // 排序模式：'按时间' 或 '按快递公司'
   @State isEditMode: boolean = false;
   @State selectedParcels: Set<number> = new Set();
   @State groupedData: Map<string, ParcelModel[]> = new Map();
-  @State sortedFilterTags: string[] = ['按时间']; // 动态排序的筛选标签
   private database: ParcelDatabase = ParcelDatabase.getInstance();
   private scanService: ScanService = ScanService.getInstance();
 
@@ -39,112 +38,89 @@ struct Index {
   // 加载测试数据
   async loadTestData() {
     const existingData = await this.database.queryAllParcels();
-    if (existingData.length === 0) {
-      // 添加一些测试数据
-      const testParcels = [
-        new ParcelModel('2-5-2418', '极兔速递', '菜鸟驿站', '杭州万泰凤华新建店', '17:45', 0),
-        new ParcelModel('6-2-2175', '中通快递', '菜鸟驿站', '杭州万泰凤华新建店', '17:37', 0),
-        new ParcelModel('6-2-2173', '圆通速递', '菜鸟驿站', '杭州万泰凤华新建店', '17:37', 0),
-        new ParcelModel('2-5-2498', '京东快递', '菜鸟驿站', '杭州万泰凤华新建店', '17:37', 0),
+    
+    // 临时强制加载测试数据（测试完记得改回来！）
+    if (existingData.length > 0) {
+      console.info('检测到已有数据，先清空旧数据');
+      // 删除所有旧数据
+      for (const parcel of existingData) {
+        if (parcel.id) {
+          await this.database.deleteParcel(parcel.id);
+        }
+      }
+    }
+    
+    // 添加丰富的测试数据（每个快递公司数量不同，方便测试排序功能）
+    // 将 pickupTime 转换为今天对应时刻的时间戳
+    const convertTimeToTimestamp = (timeStr: string): number => {
+      const parts = timeStr.split(':');
+      const hour = parseInt(parts[0]);
+      const minute = parseInt(parts[1]);
+      const now = new Date();
+      now.setHours(hour, minute, 0, 0);
+      return now.getTime();
+    };
+    
+    const testParcels = [
+        // 顺丰速运 (2件)
+        new ParcelModel('SF1234567890', '顺丰速运', '顺丰站点', '杭州文三路营业点', '18:45', 0),
+        new ParcelModel('SF1234567891', '顺丰速运', '顺丰站点', '杭州文三路营业点', '17:55', 0),
+        
+        // 中通快递 (5件 - 数量最多)
+        new ParcelModel('6-2-2175', '中通快递', '菜鸟驿站', '杭州万泰凤华新建店', '18:30', 0),
+        new ParcelModel('6-2-2176', '中通快递', '兔喜生活', '杭州西湖区文一路店', '17:45', 0),
+        new ParcelModel('6-2-2177', '中通快递', '菜鸟驿站', '杭州万泰凤华新建店', '16:20', 0),
+        new ParcelModel('6-2-2178', '中通快递', '妈妈驿站', '杭州城西银泰店', '15:30', 0),
+        new ParcelModel('6-2-2179', '中通快递', '菜鸟驿站', '杭州万泰凤华新建店', '14:15', 0),
+        
+        // 京东快递 (2件)
+        new ParcelModel('JD8888888888', '京东快递', '京东自提点', '杭州西湖区文一路', '18:20', 0),
+        new ParcelModel('JD8888888889', '京东快递', '京东自提点', '杭州西湖区文一路', '16:30', 0),
+        
+        // 圆通速递 (4件)
+        new ParcelModel('6-3-1234', '圆通速递', '菜鸟驿站', '杭州万泰凤华新建店', '18:15', 0),
+        new ParcelModel('6-3-1235', '圆通速递', '兔喜生活', '杭州西湖区文一路店', '17:20', 0),
+        new ParcelModel('6-3-1236', '圆通速递', '菜鸟驿站', '杭州万泰凤华新建店', '16:45', 0),
+        new ParcelModel('6-3-1237', '圆通速递', '妈妈驿站', '杭州城西银泰店', '15:50', 0),
+        
+        // 极兔速递 (3件)
+        new ParcelModel('2-5-2418', '极兔速递', '菜鸟驿站', '杭州万泰凤华新建店', '18:05', 0),
+        new ParcelModel('2-5-2419', '极兔速递', '兔喜生活', '杭州西湖区文一路店', '17:30', 0),
+        new ParcelModel('2-5-2420', '极兔速递', '菜鸟驿站', '杭州万泰凤华新建店', '16:10', 0),
+        
+        // 韵达快递 (1件)
+        new ParcelModel('7-1-9876', '韵达快递', '菜鸟驿站', '杭州万泰凤华新建店', '17:40', 0),
+        
+        // 申通快递 (1件)
+        new ParcelModel('8-2-5432', '申通快递', '兔喜生活', '杭州西湖区文一路店', '16:50', 0),
+        
+        // 邮政快递 (1件)
+        new ParcelModel('EMS123456789', '邮政快递', '邮政营业厅', '杭州文三路邮局', '15:20', 0),
       ];
+
+      // 将 pickupTime（如 '18:30'）转换为时间戳并设置到 createTime
+      testParcels.forEach(parcel => {
+        parcel.createTime = convertTimeToTimestamp(parcel.pickupTime);
+      });
 
       for (const parcel of testParcels) {
         await this.database.insertParcel(parcel);
       }
-    }
+      
+      console.info('✅ 测试数据加载完成：共 ' + testParcels.length + ' 条记录');
+      console.info('📦 中通快递：5件，圆通速递：4件，极兔速递：3件');
+      console.info('📦 顺丰速运：2件，京东快递：2件');
+      console.info('📦 韵达快递：1件，申通快递：1件，邮政快递：1件');
   }
 
   // 加载包裹数据
   async loadParcels() {
     const status = this.currentTab === 0 ? Constants.STATUS_PENDING : Constants.STATUS_PICKED;
     this.parcelList = await this.database.queryParcelsByStatus(status);
-    // 更新筛选标签排序（仅在待取页面）
-    if (this.currentTab === 0) {
-      this.updateFilterTagsOrder();
-    }
     // 更新分组数据
     this.groupedData = this.getGroupedParcels();
   }
 
-  // 动态更新筛选标签排序
-  updateFilterTagsOrder() {
-    // 统计每个快递公司的待取件数量
-    const companyCount = new Map<string, number>();
-
-    // 遍历所有待取包裹，统计各快递公司数量
-    this.parcelList.forEach(parcel => {
-      const company = parcel.courierCompany;
-
-      // 匹配快递公司与筛选标签的对应关系
-      Constants.FILTER_TAGS.forEach(tag => {
-        if (tag === '按时间') {
-          return;
-        }
-
-        // 判断包裹是否属于该快递公司
-        let isMatch = false;
-
-        if (tag === '其他') {
-          // "其他"匹配所有非主流快递
-          let isMainCourier = false;
-          for (const mainCourier of Constants.MAIN_COURIERS) {
-            if (company.includes(mainCourier)) {
-              isMainCourier = true;
-              break;
-            }
-          }
-          isMatch = !isMainCourier;
-        } else if (tag === '顺丰' && company.includes('顺丰')) {
-          isMatch = true;
-        } else if (tag === '中通' && company.includes('中通')) {
-          isMatch = true;
-        } else if (tag === '申通' && company.includes('申通')) {
-          isMatch = true;
-        } else if (tag === '韵达' && company.includes('韵达')) {
-          isMatch = true;
-        } else if (tag === '极兔' && company.includes('极兔')) {
-          isMatch = true;
-        } else if (tag === '邮政' && (company.includes('邮政') || company.includes('EMS'))) {
-          isMatch = true;
-        } else if (tag === '圆通' && company.includes('圆通')) {
-          isMatch = true;
-        } else if (tag === '京东' && company.includes('京东')) {
-          isMatch = true;
-        } else if (tag === '百世' && company.includes('百世')) {
-          isMatch = true;
-        }
-
-        if (isMatch) {
-          companyCount.set(tag, (companyCount.get(tag) || 0) + 1);
-        }
-      });
-    });
-
-    // 对快递公司标签排序（按待取件数量降序）
-    // "其他"始终放在最后
-    const sortedCompanies = Constants.FILTER_TAGS
-      .filter(tag => tag !== '按时间' && tag !== '其他')
-      .sort((a, b) => {
-        const countA = companyCount.get(a) || 0;
-        const countB = companyCount.get(b) || 0;
-
-        // 如果数量不同，数量多的排前面
-        if (countA !== countB) {
-          return countB - countA;
-        }
-
-        // 如果数量相同，保持原有顺序
-        return Constants.FILTER_TAGS.indexOf(a) - Constants.FILTER_TAGS.indexOf(b);
-      });
-
-    // 组合结果："按时间"在第一位，"其他"在最后
-    const otherCount = companyCount.get('其他') || 0;
-    if (otherCount > 0) {
-      this.sortedFilterTags = ['按时间', ...sortedCompanies, '其他'];
-    } else {
-      this.sortedFilterTags = ['按时间', ...sortedCompanies];
-    }
-  }
 
   // 切换标签页
   async onTabChange(index: number) {
@@ -194,6 +170,36 @@ struct Index {
     // 数据刷新由 onPageShow() 生命周期处理
   }
 
+  // 从剪贴板导入短信
+  async importFromClipboard() {
+    try {
+      const systemPasteboard = pasteboard.getSystemPasteboard();
+      const pasteData = await systemPasteboard.getData();
+      
+      if (pasteData && pasteData.getPrimaryText()) {
+        const clipboardText = pasteData.getPrimaryText();
+        // 跳转到短信导入页面
+        await router.pushUrl({
+          url: 'pages/SmsImport',
+          params: {
+            smsContent: clipboardText
+          }
+        });
+      } else {
+        promptAction.showToast({
+          message: '剪贴板为空',
+          duration: 2000
+        });
+      }
+    } catch (error) {
+      console.error('Read clipboard failed:', JSON.stringify(error));
+      promptAction.showToast({
+        message: '读取剪贴板失败',
+        duration: 2000
+      });
+    }
+  }
+
   // 获取快递公司图标颜色
   getCourierColor(company: string): string {
     return IconUtils.getCourierColor(company);
@@ -204,66 +210,23 @@ struct Index {
     return IconUtils.getCourierAbbr(company);
   }
 
-  // 应用筛选
-  getFilteredParcels(): ParcelModel[] {
-    if (this.selectedFilter === '按时间') {
-      return this.parcelList;
+  // 获取排序后的包裹列表
+  getSortedParcels(): ParcelModel[] {
+    if (this.selectedSortMode === '按时间') {
+      // 按时间排序（最新的在前面）
+      return [...this.parcelList].sort((a, b) => b.createTime - a.createTime);
+    } else {
+      // 按快递公司排序
+      return this.sortParcelsByCompanyCount(this.parcelList);
     }
-
-    // 按快递公司筛选
-    return this.parcelList.filter(parcel => {
-      const company = parcel.courierCompany;
-
-      // "其他"筛选：包含所有非主流快递公司
-      if (this.selectedFilter === '其他') {
-        // 检查是否属于主流快递
-        let isMainCourier = false;
-        for (const mainCourier of Constants.MAIN_COURIERS) {
-          if (company.includes(mainCourier)) {
-            isMainCourier = true;
-            break;
-          }
-        }
-        // 返回非主流快递（德邦、天天、宅急送、菜鸟、妈妈、兔喜等）
-        return !isMainCourier;
-      }
-
-      // 根据筛选标签匹配快递公司
-      if (this.selectedFilter === '顺丰') {
-        return company.includes('顺丰');
-      } else if (this.selectedFilter === '中通') {
-        return company.includes('中通');
-      } else if (this.selectedFilter === '申通') {
-        return company.includes('申通');
-      } else if (this.selectedFilter === '韵达') {
-        return company.includes('韵达');
-      } else if (this.selectedFilter === '极兔') {
-        return company.includes('极兔');
-      } else if (this.selectedFilter === '邮政') {
-        return company.includes('邮政') || company.includes('EMS');
-      } else if (this.selectedFilter === '圆通') {
-        return company.includes('圆通');
-      } else if (this.selectedFilter === '京东') {
-        return company.includes('京东');
-      } else if (this.selectedFilter === '百世') {
-        return company.includes('百世');
-      }
-
-      return true;
-    });
   }
 
   // 按日期分组
   getGroupedParcels(): Map<string, ParcelModel[]> {
     const grouped = new Map<string, ParcelModel[]>();
-    let filteredList = this.getFilteredParcels();
+    const sortedList = this.getSortedParcels();
 
-    // 如果是"按时间"筛选，则按快递公司数量排序
-    if (this.selectedFilter === '按时间') {
-      filteredList = this.sortParcelsByCompanyCount(filteredList);
-    }
-
-    filteredList.forEach(parcel => {
+    sortedList.forEach(parcel => {
       const date = new Date(parcel.createTime);
       const dateKey = `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 
@@ -390,6 +353,16 @@ struct Index {
             await this.loadParcels();
           })
 
+        // 导入按钮（待取页面显示）
+        if (this.currentTab === 0) {
+          Text('📋')
+            .fontSize(22)
+            .fontWeight(FontWeight.Medium)
+            .onClick(() => {
+              this.importFromClipboard();
+            })
+        }
+
         // 删除按钮（已取页面显示）
         if (this.currentTab === 1) {
           Image($r('app.media.startIcon'))
@@ -414,42 +387,63 @@ struct Index {
   @Builder
   FilterBar() {
     Row() {
-      // 筛选按钮（左侧）- 使用 Scroll 支持横向滚动，按待取件数量动态排序
-      Scroll() {
-        Row({ space: 8 }) {
-          ForEach(this.sortedFilterTags, (tag: string) => {
-            Text(tag)
-              .fontSize(14)
-              .fontColor(this.selectedFilter === tag ?
-                $r('app.color.filter_button_active_text') :
-                $r('app.color.filter_button_text'))
-              .backgroundColor(this.selectedFilter === tag ?
-                $r('app.color.filter_button_active_bg') :
-                Color.Transparent)
-              .border({
-                width: this.selectedFilter === tag ? 0 : 1.5,
-                color: this.selectedFilter === tag ? 
-                  Color.Transparent : 
-                  $r('app.color.tab_border_color')
-              })
-              .borderRadius(8)
-              .padding({
-                left: 16,
-                right: 16,
-                top: 8,
-                bottom: 8
-        })
-        .onClick(() => {
-                this.selectedFilter = tag;
-                // 更新分组数据以应用筛选
-                this.groupedData = this.getGroupedParcels();
-              })
+      // 排序模式切换（两个TAB）
+      Row({ space: 8 }) {
+        // 按时间
+        Text('按时间')
+          .fontSize(14)
+          .fontColor(this.selectedSortMode === '按时间' ?
+            $r('app.color.filter_button_active_text') :
+            $r('app.color.filter_button_text'))
+          .backgroundColor(this.selectedSortMode === '按时间' ?
+            $r('app.color.filter_button_active_bg') :
+            Color.Transparent)
+          .border({
+            width: this.selectedSortMode === '按时间' ? 0 : 1.5,
+            color: this.selectedSortMode === '按时间' ? 
+              Color.Transparent : 
+              $r('app.color.tab_border_color')
           })
-        }
-        .padding({ right: 8 })
+          .borderRadius(8)
+          .padding({
+            left: 16,
+            right: 16,
+            top: 8,
+            bottom: 8
+          })
+          .onClick(() => {
+            this.selectedSortMode = '按时间';
+            this.groupedData = this.getGroupedParcels();
+          })
+
+        // 按快递公司
+        Text('按快递公司')
+          .fontSize(14)
+          .fontColor(this.selectedSortMode === '按快递公司' ?
+            $r('app.color.filter_button_active_text') :
+            $r('app.color.filter_button_text'))
+          .backgroundColor(this.selectedSortMode === '按快递公司' ?
+            $r('app.color.filter_button_active_bg') :
+            Color.Transparent)
+          .border({
+            width: this.selectedSortMode === '按快递公司' ? 0 : 1.5,
+            color: this.selectedSortMode === '按快递公司' ? 
+              Color.Transparent : 
+              $r('app.color.tab_border_color')
+          })
+          .borderRadius(8)
+          .padding({
+            left: 16,
+            right: 16,
+            top: 8,
+            bottom: 8
+          })
+          .onClick(() => {
+            this.selectedSortMode = '按快递公司';
+            this.groupedData = this.getGroupedParcels();
+          })
       }
-      .scrollable(ScrollDirection.Horizontal)
-      .scrollBar(BarState.Off)
+      .padding({ left: 16 })
       .layoutWeight(1)
 
       // 勾选框（右侧）
@@ -459,13 +453,13 @@ struct Index {
         .margin({ right: 16 })
     }
     .width('100%')
-    .padding({ left: 16, top: 12, bottom: 12 })
+    .padding({ top: 12, bottom: 12 })
     .backgroundColor(Color.White)
   }
 
   @Builder
   ParcelList() {
-    if (this.parcelList.length === 0 || this.getFilteredParcels().length === 0) {
+    if (this.parcelList.length === 0) {
       // 空状态提示
       this.EmptyState()
     } else {
@@ -501,18 +495,8 @@ struct Index {
         .fontColor($r('app.color.secondary_text'))
         .textAlign(TextAlign.Center)
 
-      // 操作建议
-      if (this.selectedFilter !== '按时间') {
-        Text('点击"按时间"查看所有包裹')
-          .fontSize(14)
-          .fontColor($r('app.color.accent_blue'))
-          .margin({ top: 8 })
-          .onClick(() => {
-            this.selectedFilter = '按时间';
-            this.groupedData = this.getGroupedParcels();
-          })
-      } else if (this.currentTab === 0) {
-        // 待取页面且无数据，提示添加
+      // 操作建议（仅待取页面显示）
+      if (this.currentTab === 0) {
         Column({ space: 12 }) {
           Text('点击右上角 + 号添加取件码')
             .fontSize(14)
@@ -533,15 +517,9 @@ struct Index {
 
   // 获取空状态提示文字
   getEmptyStateText(): string {
-    if (this.selectedFilter === '按时间') {
-      return this.currentTab === 0 ?
-        '暂无待取的快递包裹' :
-        '暂无已取的快递记录';
-    } else if (this.selectedFilter === '其他') {
-      return '暂无其他快递公司的包裹';
-    } else {
-      return `暂无${this.selectedFilter}快递的包裹`;
-    }
+    return this.currentTab === 0 ?
+      '暂无待取的快递包裹' :
+      '暂无已取的快递记录';
   }
 
   @Builder
@@ -585,9 +563,11 @@ struct Index {
           .textOverflow({ overflow: TextOverflow.Ellipsis })
           .opacity(parcel.status === Constants.STATUS_PICKED ? 0.6 : 1)
 
-        // 取件码（大号字体）
+        // 取件码（大号字体，支持长单号自适应）
         Text(parcel.pickupCode)
-          .fontSize(28)
+          .fontSize(24)
+          .minFontSize(18)
+          .maxLines(1)
           .fontWeight(FontWeight.Bold)
           .fontColor(parcel.status === Constants.STATUS_PICKED ?
             $r('app.color.secondary_text') :
@@ -597,8 +577,9 @@ struct Index {
               TextDecorationType.LineThrough :
               TextDecorationType.None
           })
-          .letterSpacing(2)
+          .letterSpacing(1)
           .margin({ top: 4 })
+          .textOverflow({ overflow: TextOverflow.Clip })
           .gesture(
             LongPressGesture()
               .onAction(() => {
