@@ -19,6 +19,7 @@ struct Index {
   @State groupedData: Map<string, ParcelModel[]> = new Map();
   private database: ParcelDatabase = ParcelDatabase.getInstance();
   private scanService: ScanService = ScanService.getInstance();
+  private companySortOrder: string[] = []; // 保存快递公司的排序顺序
 
   async aboutToAppear() {
     // 初始化数据库
@@ -127,6 +128,7 @@ struct Index {
     this.currentTab = index;
     this.isEditMode = false;
     this.selectedParcels.clear();
+    this.companySortOrder = []; // 清空排序顺序，因为待取和已取的数据不同
     await this.loadParcels();
   }
 
@@ -237,20 +239,20 @@ struct Index {
   }
 
   // 获取排序后的包裹列表
-  getSortedParcels(): ParcelModel[] {
+  getSortedParcels(recomputeOrder: boolean = false): ParcelModel[] {
     if (this.selectedSortMode === '按时间') {
       // 按时间排序（最新的在前面）
       return [...this.parcelList].sort((a, b) => b.createTime - a.createTime);
     } else {
       // 按快递公司排序
-      return this.sortParcelsByCompanyCount(this.parcelList);
+      return this.sortParcelsByCompanyCount(this.parcelList, recomputeOrder);
     }
   }
 
   // 按日期分组
-  getGroupedParcels(): Map<string, ParcelModel[]> {
+  getGroupedParcels(recomputeOrder: boolean = false): Map<string, ParcelModel[]> {
     const grouped = new Map<string, ParcelModel[]>();
-    const sortedList = this.getSortedParcels();
+    const sortedList = this.getSortedParcels(recomputeOrder);
 
     sortedList.forEach(parcel => {
       const date = new Date(parcel.createTime);
@@ -266,15 +268,8 @@ struct Index {
   }
 
   // 按快递公司待取件数量排序包裹列表
-  sortParcelsByCompanyCount(parcels: ParcelModel[]): ParcelModel[] {
-    // 1. 统计每个快递公司的包裹数量
-    const companyCount = new Map<string, number>();
-    parcels.forEach(parcel => {
-      const company = parcel.courierCompany;
-      companyCount.set(company, (companyCount.get(company) || 0) + 1);
-    });
-
-    // 2. 按快递公司分组
+  sortParcelsByCompanyCount(parcels: ParcelModel[], recomputeOrder: boolean = false): ParcelModel[] {
+    // 1. 按快递公司分组
     const companyGroups = new Map<string, ParcelModel[]>();
     parcels.forEach(parcel => {
       const company = parcel.courierCompany;
@@ -284,32 +279,57 @@ struct Index {
       companyGroups.get(company)?.push(parcel);
     });
 
-    // 3. 对每个快递公司的包裹按时间排序
+    // 2. 对每个快递公司的包裹按时间排序
     companyGroups.forEach((parcels, company) => {
       parcels.sort((a, b) => b.createTime - a.createTime);
     });
 
-    // 4. 按快递公司的包裹数量排序
-    const sortedCompanies = Array.from(companyGroups.keys()).sort((a, b) => {
-      const countA = companyCount.get(a) || 0;
-      const countB = companyCount.get(b) || 0;
+    // 3. 确定快递公司的顺序
+    let sortedCompanies: string[] = [];
+    
+    if (recomputeOrder || this.companySortOrder.length === 0) {
+      // 需要重新计算顺序：按包裹数量排序
+      const companyCount = new Map<string, number>();
+      parcels.forEach(parcel => {
+        const company = parcel.courierCompany;
+        companyCount.set(company, (companyCount.get(company) || 0) + 1);
+      });
 
-      // 数量多的排前面
-      if (countA !== countB) {
-        return countB - countA;
-      }
+      sortedCompanies = Array.from(companyGroups.keys()).sort((a, b) => {
+        const countA = companyCount.get(a) || 0;
+        const countB = companyCount.get(b) || 0;
 
-      // 数量相同，按首个包裹的创建时间排序
-      const parcelsA = companyGroups.get(a) || [];
-      const parcelsB = companyGroups.get(b) || [];
-      if (parcelsA.length > 0 && parcelsB.length > 0) {
-        return parcelsB[0].createTime - parcelsA[0].createTime;
-      }
+        // 数量多的排前面
+        if (countA !== countB) {
+          return countB - countA;
+        }
 
-      return 0;
-    });
+        // 数量相同，按首个包裹的创建时间排序
+        const parcelsA = companyGroups.get(a) || [];
+        const parcelsB = companyGroups.get(b) || [];
+        if (parcelsA.length > 0 && parcelsB.length > 0) {
+          return parcelsB[0].createTime - parcelsA[0].createTime;
+        }
 
-    // 5. 组合排序后的结果
+        return 0;
+      });
+
+      // 保存顺序
+      this.companySortOrder = sortedCompanies;
+    } else {
+      // 使用保存的顺序，但只包含当前存在的公司
+      const currentCompanies = new Set(companyGroups.keys());
+      sortedCompanies = this.companySortOrder.filter(company => currentCompanies.has(company));
+      
+      // 添加新出现的公司（如果有的话）
+      currentCompanies.forEach(company => {
+        if (!this.companySortOrder.includes(company)) {
+          sortedCompanies.push(company);
+        }
+      });
+    }
+
+    // 4. 组合排序后的结果
     const sortedParcels: ParcelModel[] = [];
     sortedCompanies.forEach(company => {
       const companyParcels = companyGroups.get(company) || [];
@@ -439,7 +459,7 @@ struct Index {
           })
           .onClick(() => {
             this.selectedSortMode = '按时间';
-            this.groupedData = this.getGroupedParcels();
+            this.groupedData = this.getGroupedParcels(false);
           })
 
         // 按快递公司
@@ -466,7 +486,7 @@ struct Index {
           })
           .onClick(() => {
             this.selectedSortMode = '按快递公司';
-            this.groupedData = this.getGroupedParcels();
+            this.groupedData = this.getGroupedParcels(true); // 切换到"按快递公司"时重新排序
           })
       }
       .padding({ left: 16 })
