@@ -136,6 +136,20 @@ struct Index {
       const newStatus = parcel.status === Constants.STATUS_PENDING ?
         Constants.STATUS_PICKED : Constants.STATUS_PENDING;
       await this.database.updateParcelStatus(parcel.id, newStatus);
+      
+      // 添加友好提示
+      if (newStatus === Constants.STATUS_PICKED) {
+        promptAction.showToast({ 
+          message: `${parcel.courierCompany} 已标记为已取，可在"已取"标签查看`, 
+          duration: 2000 
+        });
+      } else {
+        promptAction.showToast({ 
+          message: `${parcel.courierCompany} 已恢复到待取列表`, 
+          duration: 2000 
+        });
+      }
+      
       await this.loadParcels();
     }
   }
@@ -472,7 +486,7 @@ struct Index {
               }
             }, (parcel: ParcelModel) => parcel.id?.toString() || '')
           }
-        })
+        }, (date: string) => date)
       }
       .width('100%')
       .layoutWeight(1)
