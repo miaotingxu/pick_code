@@ -178,6 +178,18 @@ struct Index {
     }
   }
 
+  // 删除单个包裹（侧滑删除）
+  async deleteSingleParcel(parcel: ParcelModel) {
+    if (parcel.id) {
+      await this.database.deleteParcel(parcel.id);
+      await this.loadParcels();
+      promptAction.showToast({ 
+        message: `已删除 ${parcel.courierCompany} - ${parcel.pickupCode}`, 
+        duration: 2000 
+      });
+    }
+  }
+
   // 跳转到添加页面
   async navigateToAddPage() {
     await router.pushUrl({ url: 'pages/AddParcel' });
@@ -484,6 +496,7 @@ struct Index {
               ListItem() {
                 this.ParcelCard(parcel)
               }
+              .swipeAction({ end: this.DeleteButton(parcel) })
             }, (parcel: ParcelModel) => parcel.id?.toString() || '')
           }
         }, (date: string) => date)
@@ -551,6 +564,25 @@ struct Index {
     }
     .width('100%')
     .padding({ top: 12, bottom: 8 })
+  }
+
+  @Builder
+  DeleteButton(parcel: ParcelModel) {
+    Row() {
+      Text('删除')
+        .fontSize(16)
+        .fontColor(Color.White)
+        .fontWeight(FontWeight.Medium)
+    }
+    .width(80)
+    .height('100%')
+    .backgroundColor(Color.Red)
+    .justifyContent(FlexAlign.Center)
+    .borderRadius(12)
+    .margin({ top: 6, bottom: 6 })
+    .onClick(() => {
+      this.deleteSingleParcel(parcel);
+    })
   }
 
   @Builder
