@@ -7,7 +7,7 @@ node_modules/
 # Build outputs
 build/
 entry/build/
-oh_modules/.ohpm/
+oh_modules/
 
 # Signing files (IMPORTANT: Keep these private!)
 signature/*.p12
