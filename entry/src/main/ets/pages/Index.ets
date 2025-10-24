@@ -192,6 +192,39 @@ struct Index {
     }
   }
 
+  // 清空所有已取的包裹
+  async clearAllPickedParcels() {
+    if (this.parcelList.length === 0) {
+      promptAction.showToast({ message: '没有可清空的记录', duration: 2000 });
+      return;
+    }
+
+    // 显示确认对话框
+    promptAction.showDialog({
+      title: '确认清空',
+      message: `确定要清空所有已取的记录吗？共 ${this.parcelList.length} 条记录将被删除。`,
+      buttons: [
+        { text: '取消', color: '#666666' },
+        { text: '确定', color: '#FF0000' }
+      ]
+    }).then(async (result) => {
+      if (result.index === 1) {
+        // 用户点击了确定
+        const ids = this.parcelList.map(p => p.id).filter(id => id !== undefined) as number[];
+        if (ids.length > 0) {
+          await this.database.batchDeleteParcels(ids);
+          await this.loadParcels();
+          promptAction.showToast({ 
+            message: `已清空 ${ids.length} 条记录`, 
+            duration: 2000 
+          });
+        }
+      }
+    }).catch((err: Error) => {
+      console.error('Dialog error:', JSON.stringify(err));
+    });
+  }
+
   // 跳转到添加页面
   async navigateToAddPage() {
     await router.pushUrl({ url: 'pages/AddParcel' });
@@ -409,8 +442,15 @@ struct Index {
             })
         }
 
-        // 删除按钮（已取页面显示）
+        // 已取页面：清空和删除按钮
         if (this.currentTab === 1) {
+          Text('清空')
+            .fontSize(16)
+            .fontColor($r('app.color.accent_blue'))
+            .onClick(() => {
+              this.clearAllPickedParcels();
+            })
+          
           Image($r('app.media.startIcon'))
             .width(24)
             .height(24)
