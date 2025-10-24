@@ -836,7 +836,7 @@ struct Index {
       Column({ space: 4 }) {
         Stack() {
           Circle({ width: 24, height: 24 })
-            .fill(this.currentTab === 1 ? $r('app.color.accent_blue') : '#E8E8E8')
+            .fill(this.currentTab === 1 ? $r('app.color.accent_blue') : '#A0A0A0')
           Text('✓')
             .fontSize(16)
             .fontColor(Color.White)
@@ -846,7 +846,7 @@ struct Index {
           .fontSize(14)
           .fontColor(this.currentTab === 1 ?
             $r('app.color.primary_text') :
-            $r('app.color.secondary_text'))
+            '#666666')
           .fontWeight(this.currentTab === 1 ? FontWeight.Bold : FontWeight.Normal)
       }
       .width('50%')
