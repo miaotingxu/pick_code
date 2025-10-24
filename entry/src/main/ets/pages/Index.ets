@@ -834,8 +834,14 @@ struct Index {
 
       // 已取标签
       Column({ space: 4 }) {
-        Text(this.currentTab === 1 ? '✓' : '✓')
-          .fontSize(24)
+        Stack() {
+          Circle({ width: 24, height: 24 })
+            .fill(this.currentTab === 1 ? $r('app.color.accent_blue') : '#E8E8E8')
+          Text('✓')
+            .fontSize(16)
+            .fontColor(Color.White)
+            .fontWeight(FontWeight.Bold)
+        }
         Text('已取')
           .fontSize(14)
           .fontColor(this.currentTab === 1 ?
