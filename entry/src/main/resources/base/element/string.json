@@ -79,6 +79,10 @@
     {
       "name": "permission_notification",
       "value": "用于监听快递短信通知，自动识别取件码"
+    },
+    {
+      "name": "permission_camera",
+      "value": "用于扫描快递单上的条形码和二维码"
     }
   ]
 }
