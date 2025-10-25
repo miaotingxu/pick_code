@@ -1,6 +1,33 @@
 {
   "app": {
-    "signingConfigs": [],
+    "signingConfigs": [
+      {
+        "name": "default",
+        "type": "HarmonyOS",
+        "material": {
+          "storeFile": "signature/pickcode.p12",
+          "storePassword": "miao1234",
+          "keyAlias": "pickcode_key",
+          "keyPassword": "miao1234",
+          "signAlg": "SHA256withRSA",
+          "certpath": "signature/pickcode.cer",
+          "profile": "signature/pickcode.p7b"
+        }
+      },
+      {
+        "name": "release",
+        "type": "HarmonyOS",
+        "material": {
+          "storeFile": "signature/pickcode.p12",
+          "storePassword": "miao1234",
+          "keyAlias": "pickcode_key",
+          "keyPassword": "miao1234",
+          "signAlg": "SHA256withRSA",
+          "certpath": "signature/pickcode.cer",
+          "profile": "signature/pickcode.p7b"
+        }
+      }
+    ],
     "products": [
       {
         "name": "default",
