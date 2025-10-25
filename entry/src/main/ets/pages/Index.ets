@@ -397,7 +397,7 @@ struct Index {
   TopBar() {
     Row() {
       // 左侧菜单按钮
-      Image($r('app.media.startIcon'))
+      Image($r('app.media.big_logo'))
         .width(24)
         .height(24)
         .margin({ left: 16 })
@@ -451,7 +451,7 @@ struct Index {
               this.clearAllPickedParcels();
             })
           
-          Image($r('app.media.startIcon'))
+          Image($r('app.media.big_logo'))
             .width(24)
             .height(24)
             .onClick(() => {
@@ -809,7 +809,7 @@ struct Index {
     } else if (lowerCompany.includes('菜鸟')) {
       return $r('app.media.cainiao');
     }
-    return $r('app.media.startIcon'); // 默认图标
+    return $r('app.media.big_logo'); // 默认图标
   }
 
   @Builder

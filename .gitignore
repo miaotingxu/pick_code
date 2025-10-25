@@ -15,6 +15,9 @@ signature/*.cer
 signature/*.p7b
 signature/*.jks
 *.keystore
+*.p12
+*.csr
+material/
 
 # Local configuration
 local.properties
