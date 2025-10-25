@@ -3,6 +3,17 @@ import { ParcelModel } from '../model/ParcelModel';
 import { Constants } from '../common/Constants';
 
 /**
+ * 数据统计信息接口
+ */
+export interface DataStats {
+  totalParcels: number;
+  pendingParcels: number;
+  pickedParcels: number;
+  courierCompanies: number;
+  stationNames: number;
+}
+
+/**
  * 快递包裹数据库管理类
  */
 export class ParcelDatabase {
@@ -414,6 +425,114 @@ export class ParcelDatabase {
     } catch (error) {
       console.error('Query station names failed:', JSON.stringify(error));
       return [];
+    }
+  }
+
+  /**
+   * 清空所有数据（开发/测试用）
+   */
+  async clearAllData(): Promise<boolean> {
+    if (!this.rdbStore) {
+      return false;
+    }
+
+    try {
+      // 清空包裹记录表
+      await this.rdbStore.executeSql(`DELETE FROM ${Constants.TABLE_NAME}`);
+      
+      // 清空快递公司历史表
+      await this.rdbStore.executeSql('DELETE FROM courier_companies');
+      
+      // 清空驿站名称历史表
+      await this.rdbStore.executeSql('DELETE FROM station_names');
+      
+      console.info('All data cleared successfully');
+      return true;
+    } catch (error) {
+      console.error('Clear all data failed:', JSON.stringify(error));
+      return false;
+    }
+  }
+
+  /**
+   * 获取数据统计信息
+   */
+  async getDataStats(): Promise<DataStats> {
+    if (!this.rdbStore) {
+      const emptyStats: DataStats = {
+        totalParcels: 0,
+        pendingParcels: 0,
+        pickedParcels: 0,
+        courierCompanies: 0,
+        stationNames: 0
+      };
+      return emptyStats;
+    }
+
+    try {
+      // 统计包裹数量
+      const totalResult = await this.rdbStore.querySql(
+        `SELECT COUNT(*) as count FROM ${Constants.TABLE_NAME} WHERE isDeleted = ?`,
+        [Constants.NOT_DELETED]
+      );
+      totalResult.goToFirstRow();
+      const totalParcels = totalResult.getLong(0);
+      totalResult.close();
+
+      // 统计待取包裹
+      const pendingResult = await this.rdbStore.querySql(
+        `SELECT COUNT(*) as count FROM ${Constants.TABLE_NAME} WHERE status = ? AND isDeleted = ?`,
+        [Constants.STATUS_PENDING, Constants.NOT_DELETED]
+      );
+      pendingResult.goToFirstRow();
+      const pendingParcels = pendingResult.getLong(0);
+      pendingResult.close();
+
+      // 统计已取包裹
+      const pickedResult = await this.rdbStore.querySql(
+        `SELECT COUNT(*) as count FROM ${Constants.TABLE_NAME} WHERE status = ? AND isDeleted = ?`,
+        [Constants.STATUS_PICKED, Constants.NOT_DELETED]
+      );
+      pickedResult.goToFirstRow();
+      const pickedParcels = pickedResult.getLong(0);
+      pickedResult.close();
+
+      // 统计快递公司数量
+      const companiesResult = await this.rdbStore.querySql(
+        'SELECT COUNT(*) as count FROM courier_companies',
+        []
+      );
+      companiesResult.goToFirstRow();
+      const courierCompanies = companiesResult.getLong(0);
+      companiesResult.close();
+
+      // 统计驿站数量
+      const stationsResult = await this.rdbStore.querySql(
+        'SELECT COUNT(*) as count FROM station_names',
+        []
+      );
+      stationsResult.goToFirstRow();
+      const stationNames = stationsResult.getLong(0);
+      stationsResult.close();
+
+      const stats: DataStats = {
+        totalParcels: totalParcels,
+        pendingParcels: pendingParcels,
+        pickedParcels: pickedParcels,
+        courierCompanies: courierCompanies,
+        stationNames: stationNames
+      };
+      return stats;
+    } catch (error) {
+      console.error('Get data stats failed:', JSON.stringify(error));
+      const errorStats: DataStats = {
+        totalParcels: 0,
+        pendingParcels: 0,
+        pickedParcels: 0,
+        courierCompanies: 0,
+        stationNames: 0
+      };
+      return errorStats;
     }
   }
 

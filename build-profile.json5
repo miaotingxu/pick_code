@@ -5,26 +5,26 @@
         "name": "default",
         "type": "HarmonyOS",
         "material": {
-          "storeFile": "signature/pickcode.p12",
-          "storePassword": "miao1234",
-          "keyAlias": "pickcode_key",
-          "keyPassword": "miao1234",
-          "signAlg": "SHA256withRSA",
-          "certpath": "signature/pickcode.cer",
-          "profile": "signature/pickcode.p7b"
+          "certpath": "C:\\Users\\ASUS\\.ohos\\config\\release_PickCode_IYigm-tfSh4lCMve_awgHCxBqdNKN96ueDzzbp7DhsI=.cer",
+          "keyAlias": "debugKey",
+          "keyPassword": "000000198413654CC3A9527838F38E3FF86178834FB718D3C10759BCEE936A0E24A8E29DD1DC6CD6C7",
+          "profile": "C:\\Users\\ASUS\\.ohos\\config\\release_PickCode_IYigm-tfSh4lCMve_awgHCxBqdNKN96ueDzzbp7DhsI=.p7b",
+          "signAlg": "SHA256withECDSA",
+          "storeFile": "C:\\Users\\ASUS\\.ohos\\config\\release_PickCode_IYigm-tfSh4lCMve_awgHCxBqdNKN96ueDzzbp7DhsI=.p12",
+          "storePassword": "00000019FCBB108C755248839F47D8FD2138CFFE176B9EDC2575A9C6310B290A23D436BB2F834160E4"
         }
       },
       {
         "name": "release",
         "type": "HarmonyOS",
         "material": {
-          "storeFile": "signature/pickcode.p12",
-          "storePassword": "miao1234",
-          "keyAlias": "pickcode_key",
-          "keyPassword": "miao1234",
-          "signAlg": "SHA256withRSA",
-          "certpath": "signature/pickcode.cer",
-          "profile": "signature/pickcode.p7b"
+          "certpath": "C:\\Users\\ASUS\\.ohos\\config\\release_PickCode_IYigm-tfSh4lCMve_awgHCxBqdNKN96ueDzzbp7DhsI=.cer",
+          "keyAlias": "debugKey",
+          "keyPassword": "000000198413654CC3A9527838F38E3FF86178834FB718D3C10759BCEE936A0E24A8E29DD1DC6CD6C7",
+          "profile": "C:\\Users\\ASUS\\.ohos\\config\\release_PickCode_IYigm-tfSh4lCMve_awgHCxBqdNKN96ueDzzbp7DhsI=.p7b",
+          "signAlg": "SHA256withECDSA",
+          "storeFile": "C:\\Users\\ASUS\\.ohos\\config\\release_PickCode_IYigm-tfSh4lCMve_awgHCxBqdNKN96ueDzzbp7DhsI=.p12",
+          "storePassword": "00000019FCBB108C755248839F47D8FD2138CFFE176B9EDC2575A9C6310B290A23D436BB2F834160E4"
         }
       }
     ],

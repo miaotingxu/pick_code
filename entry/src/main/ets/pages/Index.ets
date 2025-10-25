@@ -1,5 +1,5 @@
 import { ParcelModel } from '../model/ParcelModel';
-import { ParcelDatabase } from '../database/ParcelDatabase';
+import { ParcelDatabase, DataStats } from '../database/ParcelDatabase';
 import { Constants } from '../common/Constants';
 import { ScanService } from '../service/ScanService';
 import { IconUtils } from '../utils/IconUtils';
@@ -17,6 +17,15 @@ struct Index {
   @State isEditMode: boolean = false;
   @State selectedParcels: Set<number> = new Set();
   @State groupedData: Map<string, ParcelModel[]> = new Map();
+  @State showSettingsDialog: boolean = false; // 设置对话框
+  @State showMenuDialog: boolean = false; // 功能菜单对话框
+  @State dataStats: DataStats = {
+    totalParcels: 0,
+    pendingParcels: 0,
+    pickedParcels: 0,
+    courierCompanies: 0,
+    stationNames: 0
+  };
   private database: ParcelDatabase = ParcelDatabase.getInstance();
   private scanService: ScanService = ScanService.getInstance();
   private companySortOrder: string[] = []; // 保存快递公司的排序顺序
@@ -391,58 +400,45 @@ struct Index {
     .width('100%')
     .height('100%')
     .backgroundColor($r('app.color.background_color'))
+    .bindSheet($$this.showSettingsDialog, this.SettingsDialog(), {
+      height: 480,
+      showClose: true,
+      dragBar: true,
+      onDisappear: () => {
+        this.showSettingsDialog = false;
+      }
+    })
+    .bindSheet($$this.showMenuDialog, this.MenuDialog(), {
+      height: this.currentTab === 0 ? 340 : 380,
+      showClose: false,
+      dragBar: true,
+      onDisappear: () => {
+        this.showMenuDialog = false;
+      }
+    })
   }
 
   @Builder
   TopBar() {
     Row() {
-      // 左侧菜单按钮
+      // 左侧 Logo
       Image($r('app.media.big_logo'))
-        .width(24)
-        .height(24)
+        .width(40)
+        .height(40)
         .margin({ left: 16 })
 
       // 标题
       Text(this.currentTab === 0 ?
         `待取包裹 (${this.parcelList.length})` :
         '取件记录')
-        .fontSize(28)
+        .fontSize(20)
         .fontWeight(FontWeight.Bold)
         .margin({ left: 16 })
         .layoutWeight(1)
 
-      // 右侧功能按钮
+      // 右侧功能区
       Row({ space: 16 }) {
-        // 添加按钮
-        Text('+')
-          .fontSize(28)
-          .fontWeight(FontWeight.Medium)
-          .onClick(() => {
-            this.navigateToAddPage();
-          })
-
-        // 扫码按钮
-        Text('⊞')
-          .fontSize(24)
-          .fontWeight(FontWeight.Medium)
-          .onClick(async () => {
-            const context = getContext(this) as common.UIAbilityContext;
-            await this.scanService.startScan(context);
-            // 扫码后刷新数据
-            await this.loadParcels();
-          })
-
-        // 导入按钮（待取页面显示）
-        if (this.currentTab === 0) {
-          Text('📋')
-            .fontSize(22)
-            .fontWeight(FontWeight.Medium)
-            .onClick(() => {
-              this.importFromClipboard();
-            })
-        }
-
-        // 已取页面：清空和删除按钮
+        // 已取页面：显示清空按钮
         if (this.currentTab === 1) {
           Text('清空')
             .fontSize(16)
@@ -450,24 +446,22 @@ struct Index {
             .onClick(() => {
               this.clearAllPickedParcels();
             })
-          
-          Image($r('app.media.big_logo'))
-            .width(24)
-            .height(24)
-            .onClick(() => {
-              this.isEditMode = !this.isEditMode;
-              if (!this.isEditMode) {
-                this.selectedParcels.clear();
-              }
-            })
         }
+
+        // 菜单按钮（三个点）
+        Text('⋮')
+          .fontSize(28)
+          .fontWeight(FontWeight.Medium)
+          .onClick(() => {
+            this.showMenuDialog = true;
+          })
       }
       .margin({ right: 16 })
     }
     .width('100%')
-    .height(56)
+    .height(64)
     .backgroundColor(Color.White)
-    .padding({ top: 10, bottom: 10 })
+    .padding({ top: 12, bottom: 12 })
   }
 
   @Builder
@@ -529,14 +523,8 @@ struct Index {
             this.groupedData = this.getGroupedParcels(true); // 切换到"按快递公司"时重新排序
           })
       }
-      .padding({ left: 16 })
+      .padding({ left: 16, right: 16 })
       .layoutWeight(1)
-
-      // 勾选框（右侧）
-      Checkbox()
-        .width(24)
-        .height(24)
-        .margin({ right: 16 })
     }
     .width('100%')
     .padding({ top: 12, bottom: 12 })
@@ -859,5 +847,251 @@ struct Index {
     .height(64)
     .backgroundColor(Color.White)
     .border({ width: { top: 1 }, color: $r('app.color.divider_color') })
+  }
+
+  @Builder
+  SettingsDialog() {
+    Column({ space: 20 }) {
+      // 标题
+      Text('数据管理')
+        .fontSize(20)
+        .fontWeight(FontWeight.Bold)
+        .width('100%')
+
+      // 数据统计
+      Column({ space: 12 }) {
+        Text('数据统计')
+          .fontSize(16)
+          .fontWeight(FontWeight.Medium)
+          .width('100%')
+
+        Column({ space: 8 }) {
+          this.StatItem('总记录数', this.dataStats.totalParcels.toString())
+          this.StatItem('待取包裹', this.dataStats.pendingParcels.toString())
+          this.StatItem('已取包裹', this.dataStats.pickedParcels.toString())
+          this.StatItem('快递公司', this.dataStats.courierCompanies.toString())
+          this.StatItem('驿站数量', this.dataStats.stationNames.toString())
+        }
+        .width('100%')
+        .backgroundColor($r('app.color.card_background'))
+        .borderRadius(12)
+        .padding(16)
+      }
+
+      // 危险操作区域
+      Column({ space: 12 }) {
+        Text('危险操作')
+          .fontSize(16)
+          .fontWeight(FontWeight.Medium)
+          .fontColor('#FF0000')
+          .width('100%')
+
+        Button('清空所有数据')
+          .width('100%')
+          .height(48)
+          .backgroundColor('#FF0000')
+          .fontColor(Color.White)
+          .fontSize(16)
+          .fontWeight(FontWeight.Medium)
+          .borderRadius(12)
+          .onClick(() => {
+            this.confirmClearAllData();
+          })
+
+        Text('⚠️ 此操作将清空所有取件码记录、快递公司历史和驿站历史，且无法恢复！')
+          .fontSize(12)
+          .fontColor('#999999')
+          .width('100%')
+          .textAlign(TextAlign.Center)
+      }
+
+      // 应用信息
+      Column({ space: 8 }) {
+        Text('应用信息')
+          .fontSize(16)
+          .fontWeight(FontWeight.Medium)
+          .width('100%')
+
+        Column({ space: 6 }) {
+          this.InfoItem('应用名称', 'PickCode')
+          this.InfoItem('包名', 'com.mtx.take.code')
+          this.InfoItem('版本号', '1.0.0')
+        }
+        .width('100%')
+        .backgroundColor($r('app.color.card_background'))
+        .borderRadius(12)
+        .padding(16)
+      }
+    }
+    .width('100%')
+    .padding(20)
+  }
+
+  @Builder
+  StatItem(label: string, value: string) {
+    Row() {
+      Text(label)
+        .fontSize(14)
+        .fontColor($r('app.color.secondary_text'))
+        .layoutWeight(1)
+
+      Text(value)
+        .fontSize(16)
+        .fontWeight(FontWeight.Medium)
+        .fontColor($r('app.color.primary_text'))
+    }
+    .width('100%')
+  }
+
+  @Builder
+  InfoItem(label: string, value: string) {
+    Row() {
+      Text(label)
+        .fontSize(14)
+        .fontColor($r('app.color.secondary_text'))
+        .layoutWeight(1)
+
+      Text(value)
+        .fontSize(14)
+        .fontColor($r('app.color.primary_text'))
+    }
+    .width('100%')
+  }
+
+  /**
+   * 确认清空所有数据
+   */
+  confirmClearAllData() {
+    promptAction.showDialog({
+      title: '⚠️ 危险操作',
+      message: `确定要清空所有数据吗？\n\n这将删除：\n• ${this.dataStats.totalParcels} 条取件码记录\n• ${this.dataStats.courierCompanies} 个快递公司历史\n• ${this.dataStats.stationNames} 个驿站历史\n\n此操作无法恢复！`,
+      buttons: [
+        { text: '取消', color: '#666666' },
+        { text: '确定清空', color: '#FF0000' }
+      ]
+    }).then(async (result) => {
+      if (result.index === 1) {
+        await this.clearAllData();
+      }
+    });
+  }
+
+  /**
+   * 清空所有数据
+   */
+  async clearAllData() {
+    const success = await this.database.clearAllData();
+    
+    if (success) {
+      // 关闭设置对话框
+      this.showSettingsDialog = false;
+      
+      // 刷新数据
+      await this.loadParcels();
+      
+      // 显示成功提示
+      promptAction.showToast({
+        message: '✓ 所有数据已清空',
+        duration: 2000
+      });
+    } else {
+      promptAction.showToast({
+        message: '✗ 清空失败，请重试',
+        duration: 2000
+      });
+    }
+  }
+
+  @Builder
+  MenuDialog() {
+    Column({ space: 0 }) {
+      // 标题
+      Row() {
+        Text('功能菜单')
+          .fontSize(18)
+          .fontWeight(FontWeight.Bold)
+          .layoutWeight(1)
+        
+        Text('✕')
+          .fontSize(24)
+          .fontColor('#999999')
+          .onClick(() => {
+            this.showMenuDialog = false;
+          })
+      }
+      .width('100%')
+      .padding(16)
+      .border({ width: { bottom: 1 }, color: $r('app.color.divider_color') })
+
+      // 菜单项列表
+      Column({ space: 0 }) {
+        // 设置
+        this.MenuItem('⚙', '设置', async () => {
+          this.showMenuDialog = false;
+          this.dataStats = await this.database.getDataStats();
+          this.showSettingsDialog = true;
+        })
+
+        // 添加取件码
+        this.MenuItem('+', '添加取件码', () => {
+          this.showMenuDialog = false;
+          this.navigateToAddPage();
+        })
+
+        // 扫码添加
+        this.MenuItem('⊞', '扫码添加', async () => {
+          this.showMenuDialog = false;
+          const context = getContext(this) as common.UIAbilityContext;
+          await this.scanService.startScan(context);
+          await this.loadParcels();
+        })
+
+        // 从剪贴板导入（仅待取页面）
+        if (this.currentTab === 0) {
+          this.MenuItem('📋', '从剪贴板导入', () => {
+            this.showMenuDialog = false;
+            this.importFromClipboard();
+          })
+        }
+
+        // 编辑模式（仅已取页面）
+        if (this.currentTab === 1) {
+          this.MenuItem('✎', this.isEditMode ? '退出编辑' : '批量管理', () => {
+            this.showMenuDialog = false;
+            this.isEditMode = !this.isEditMode;
+            if (!this.isEditMode) {
+              this.selectedParcels.clear();
+            }
+          })
+        }
+      }
+      .width('100%')
+    }
+    .width('100%')
+    .backgroundColor(Color.White)
+    .borderRadius({ topLeft: 16, topRight: 16 })
+  }
+
+  @Builder
+  MenuItem(icon: string, label: string, action: () => void) {
+    Row({ space: 16 }) {
+      Text(icon)
+        .fontSize(24)
+        .width(32)
+        .textAlign(TextAlign.Center)
+      
+      Text(label)
+        .fontSize(16)
+        .fontColor($r('app.color.primary_text'))
+        .layoutWeight(1)
+      
+      Text('›')
+        .fontSize(20)
+        .fontColor('#CCCCCC')
+    }
+    .width('100%')
+    .padding({ left: 16, right: 16, top: 16, bottom: 16 })
+    .onClick(action)
+    .border({ width: { bottom: 1 }, color: $r('app.color.divider_color') })
   }
 }

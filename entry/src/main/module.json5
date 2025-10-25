@@ -13,16 +13,6 @@
     "pages": "$profile:main_pages",
     "requestPermissions": [
       {
-        "name": "ohos.permission.READ_MESSAGES",
-        "reason": "$string:permission_read_messages",
-        "usedScene": {
-          "abilities": [
-            "EntryAbility"
-          ],
-          "when": "inuse"
-        }
-      },
-      {
         "name": "ohos.permission.CAMERA",
         "reason": "$string:permission_camera",
         "usedScene": {

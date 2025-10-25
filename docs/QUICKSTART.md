@@ -124,7 +124,7 @@ File -> Open -> 选择项目文件夹
 
 ### Q4: 支持哪些快递公司？
 
-目前支持 11 家主流快递公司，详见 [README.md](README.md#支持的快递公司)
+目前支持 11 家主流快递公司，详见 [README.md](../README.md#支持的快递公司)
 
 ### Q5: 数据存储在哪里？
 
@@ -204,7 +204,7 @@ await this.database.clearAllData(); // 需要自己实现此方法
 
 ## 下一步
 
-- 📖 阅读完整文档：[README.md](README.md)
+- 📖 阅读完整文档：[README.md](../README.md)
 - 🎨 自定义图标：[ICONS_README.md](ICONS_README.md)
 - 📝 查看更新日志：[CHANGELOG.md](CHANGELOG.md)
 - 🚀 开始开发：修改代码，实现自己的需求
@@ -214,7 +214,7 @@ await this.database.clearAllData(); // 需要自己实现此方法
 如果遇到问题：
 
 1. 检查 DevEco Studio 的 Log 输出
-2. 查看 [README.md](README.md) 中的"注意事项"
+2. 查看 [README.md](../README.md) 中的"注意事项"
 3. 提交 Issue 到项目仓库
 
 ---
