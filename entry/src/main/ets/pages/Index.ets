@@ -409,7 +409,7 @@ struct Index {
       }
     })
     .bindSheet($$this.showMenuDialog, this.MenuDialog(), {
-      height: this.currentTab === 0 ? 340 : 380,
+      height: this.currentTab === 0 ? 400 : 440,
       showClose: false,
       dragBar: true,
       onDisappear: () => {
@@ -1064,6 +1064,14 @@ struct Index {
             }
           })
         }
+
+        // 意见反馈
+        this.MenuItem('💬', '意见反馈', () => {
+          this.showMenuDialog = false;
+          router.pushUrl({
+            url: 'pages/FeedbackPage'
+          });
+        })
       }
       .width('100%')
     }

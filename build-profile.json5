@@ -5,26 +5,26 @@
         "name": "default",
         "type": "HarmonyOS",
         "material": {
-          "certpath": "C:\\Users\\ASUS\\.ohos\\config\\release_PickCode_IYigm-tfSh4lCMve_awgHCxBqdNKN96ueDzzbp7DhsI=.cer",
-          "keyAlias": "debugKey",
-          "keyPassword": "000000198413654CC3A9527838F38E3FF86178834FB718D3C10759BCEE936A0E24A8E29DD1DC6CD6C7",
-          "profile": "C:\\Users\\ASUS\\.ohos\\config\\release_PickCode_IYigm-tfSh4lCMve_awgHCxBqdNKN96ueDzzbp7DhsI=.p7b",
+          "storeFile": "signature/takecode.p12",
+          "storePassword": "000000626654762397D0C2AB04838BD598189C44CB9FDF18849D83959B4F2EA1DAF93BEC3E7969292DE2464A1648C6026FA8AE83F6A74EB2EE8D4A5EDB72C708ECBBDF65EE5BB22E19E15A86DD5425C37B373E8D355A60AB536E7C0D5D1CAEB5E6FAC6DC2A9DB8CA9CBFABD4DD2039B0D7AF",
+          "keyAlias": "takecode",
+          "keyPassword": "0000006200C4115AD65437CA6A6BAFE0EBD2F1301C6376524A7220C5F371C0A3436829FE440C85F32DE92ED6821F96A9DFD5DE8DBA9F5D8E7281492DBB496A5AD654DD1CC02E0DDE478EC0C3EA8356E0A1F7B3235B6788DFC1ED9DC042171CB78F8A18F75FCFC0DD34144F087A22EB76AE38",
           "signAlg": "SHA256withECDSA",
-          "storeFile": "C:\\Users\\ASUS\\.ohos\\config\\release_PickCode_IYigm-tfSh4lCMve_awgHCxBqdNKN96ueDzzbp7DhsI=.p12",
-          "storePassword": "00000019FCBB108C755248839F47D8FD2138CFFE176B9EDC2575A9C6310B290A23D436BB2F834160E4"
+          "profile": "signature/takecodeRelease.p7b",
+          "certpath": "signature/release.cer"
         }
       },
       {
         "name": "release",
         "type": "HarmonyOS",
         "material": {
-          "certpath": "C:\\Users\\ASUS\\.ohos\\config\\release_PickCode_IYigm-tfSh4lCMve_awgHCxBqdNKN96ueDzzbp7DhsI=.cer",
-          "keyAlias": "debugKey",
+          "storeFile": "signature/takecode.p12",
+          "storePassword": "000000198413654CC3A9527838F38E3FF86178834FB718D3C10759BCEE936A0E24A8E29DD1DC6CD6C7",
+          "keyAlias": "takecode",
           "keyPassword": "000000198413654CC3A9527838F38E3FF86178834FB718D3C10759BCEE936A0E24A8E29DD1DC6CD6C7",
-          "profile": "C:\\Users\\ASUS\\.ohos\\config\\release_PickCode_IYigm-tfSh4lCMve_awgHCxBqdNKN96ueDzzbp7DhsI=.p7b",
           "signAlg": "SHA256withECDSA",
-          "storeFile": "C:\\Users\\ASUS\\.ohos\\config\\release_PickCode_IYigm-tfSh4lCMve_awgHCxBqdNKN96ueDzzbp7DhsI=.p12",
-          "storePassword": "00000019FCBB108C755248839F47D8FD2138CFFE176B9EDC2575A9C6310B290A23D436BB2F834160E4"
+          "certpath": "signature/release.cer",
+          "profile": "signature/takecodeRelease.p7b"
         }
       }
     ],
@@ -32,13 +32,13 @@
       {
         "name": "default",
         "signingConfig": "default",
-        "targetSdkVersion": "6.0.0(20)",
-        "compatibleSdkVersion": "6.0.0(20)",
+        "targetSdkVersion": "5.0.0(12)",
+        "compatibleSdkVersion": "4.1.0(11)",
         "runtimeOS": "HarmonyOS",
         "buildOption": {
           "strictMode": {
             "caseSensitiveCheck": true,
-            "useNormalizedOHMUrl": true
+            "useNormalizedOHMUrl": false
           }
         }
       }
